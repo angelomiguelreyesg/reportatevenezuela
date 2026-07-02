@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/cliente";
 import { TIPOS_REPORTE, ETIQUETAS_TIPO, NIVELES_RIESGO } from "@/lib/constantes";
+import { obtenerCache, guardarCache } from "@/lib/utilidades/cache";
 
 interface Conteos {
   total: number;
@@ -33,10 +34,23 @@ export default function PaginaGobierno() {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    async function obtenerDatos() {
-      try {
-        const { data: reportes } = await supabase.from("reportes").select("*");
+    let activo = true;
 
+    async function obtenerDatos() {
+      const CACHE_CLAVE = "gobierno_datos";
+      const cache = obtenerCache<Conteos>(CACHE_CLAVE);
+      if (cache) {
+        if (activo) {
+          setConteos(cache);
+          setCargando(false);
+          return;
+        }
+      }
+
+      try {
+        const { data: reportes } = await supabase.from("reportes").select("tipo_reporte, estado, nivel_riesgo, genero, edad");
+
+        if (!activo) return;
         if (!reportes) return;
 
         const porTipo: Record<string, number> = {};
@@ -59,22 +73,26 @@ export default function PaginaGobierno() {
           }
         }
 
-        setConteos({
-          total: reportes.length,
-          porTipo,
-          porEstado,
-          porRiesgo,
-          porGenero,
-          rangosEdad,
-        });
+        const resultado = { total: reportes.length, porTipo, porEstado, porRiesgo, porGenero, rangosEdad };
+        guardarCache(CACHE_CLAVE, resultado);
+
+        if (activo) {
+          setConteos(resultado);
+        }
       } catch {
-        setConteos(null);
+        if (activo) {
+          setConteos(null);
+        }
       } finally {
-        setCargando(false);
+        if (activo) {
+          setCargando(false);
+        }
       }
     }
 
     obtenerDatos();
+
+    return () => { activo = false; };
   }, []);
 
   if (cargando) {

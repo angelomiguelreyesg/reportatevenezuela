@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/cliente";
 import { TIPOS_REPORTE, NIVELES_RIESGO } from "@/lib/constantes";
+import { obtenerCache, guardarCache } from "@/lib/utilidades/cache";
 
 interface Conteos {
   total: number;
@@ -21,6 +22,16 @@ export default function PanelDatos() {
     let activo = true;
 
     async function obtenerEstadisticas() {
+      const CACHE_CLAVE = "panel_datos";
+      const cache = obtenerCache<Conteos>(CACHE_CLAVE);
+      if (cache) {
+        if (activo) {
+          setConteos(cache);
+          setCargando(false);
+          return;
+        }
+      }
+
       try {
         const { data: todos } = await supabase.from("reportes").select("tipo_reporte, estado, nivel_riesgo, genero, edad");
 
@@ -32,33 +43,35 @@ export default function PanelDatos() {
         }
 
         const resultado: Conteos = {
-        total: todos.length,
-        porTipo: {},
-        porEstado: {},
-        porRiesgo: {},
-        genero: {},
-        rangoEdad: {},
-      };
+          total: todos.length,
+          porTipo: {},
+          porEstado: {},
+          porRiesgo: {},
+          genero: {},
+          rangoEdad: {},
+        };
 
-      for (const r of todos) {
-        resultado.porTipo[r.tipo_reporte] = (resultado.porTipo[r.tipo_reporte] || 0) + 1;
-        resultado.porEstado[r.estado] = (resultado.porEstado[r.estado] || 0) + 1;
+        for (const r of todos) {
+          resultado.porTipo[r.tipo_reporte] = (resultado.porTipo[r.tipo_reporte] || 0) + 1;
+          resultado.porEstado[r.estado] = (resultado.porEstado[r.estado] || 0) + 1;
 
-        if (r.nivel_riesgo) {
-          resultado.porRiesgo[r.nivel_riesgo] = (resultado.porRiesgo[r.nivel_riesgo] || 0) + 1;
+          if (r.nivel_riesgo) {
+            resultado.porRiesgo[r.nivel_riesgo] = (resultado.porRiesgo[r.nivel_riesgo] || 0) + 1;
+          }
+          if (r.genero) {
+            resultado.genero[r.genero] = (resultado.genero[r.genero] || 0) + 1;
+          }
+          if (r.edad) {
+            const rango = r.edad < 18 ? "0-17" : r.edad < 30 ? "18-29" : r.edad < 50 ? "30-49" : r.edad < 65 ? "50-64" : "65+";
+            resultado.rangoEdad[rango] = (resultado.rangoEdad[rango] || 0) + 1;
+          }
         }
-        if (r.genero) {
-          resultado.genero[r.genero] = (resultado.genero[r.genero] || 0) + 1;
-        }
-        if (r.edad) {
-          const rango = r.edad < 18 ? "0-17" : r.edad < 30 ? "18-29" : r.edad < 50 ? "30-49" : r.edad < 65 ? "50-64" : "65+";
-          resultado.rangoEdad[rango] = (resultado.rangoEdad[rango] || 0) + 1;
-        }
-      }
 
-      if (activo) {
-        setConteos(resultado);
-      }
+        guardarCache(CACHE_CLAVE, resultado);
+
+        if (activo) {
+          setConteos(resultado);
+        }
       } catch {
         if (activo) {
           setConteos(null);
