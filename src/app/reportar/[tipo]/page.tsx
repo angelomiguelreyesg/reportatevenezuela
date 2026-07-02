@@ -9,9 +9,9 @@ interface Props {
 }
 
 const MAPA_TITULOS: Record<string, string> = {
+  infraestructura: "Reportar infraestructura deteriorada",
   desaparecido: "Reportar persona desaparecida",
   incidencia: "Reportar incidencia general",
-  infraestructura: "Reportar infraestructura deteriorada",
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -28,24 +28,32 @@ export default function ListaReportes({ filtro, limite = 12 }: Props) {
     let activo = true;
 
     async function obtenerReportes() {
-      setCargando(true);
-      let consulta = supabase
-        .from("reportes")
-        .select("*")
-        .order("creado_en", { ascending: false })
-        .limit(limite);
+      try {
+        let consulta = supabase
+          .from("reportes")
+          .select("*")
+          .order("creado_en", { ascending: false })
+          .limit(limite);
 
-      if (filtro) {
-        consulta = consulta.eq("tipo_reporte", filtro);
-      }
-
-      const { data, error } = await consulta;
-
-      if (activo) {
-        if (!error && data) {
-          setReportes(data as Reporte[]);
+        if (filtro) {
+          consulta = consulta.eq("tipo_reporte", filtro);
         }
-        setCargando(false);
+
+        const { data: datos, error } = await consulta;
+
+        if (activo) {
+          if (!error && datos) {
+            setReportes(datos as Reporte[]);
+          }
+        }
+      } catch {
+        if (activo) {
+          setReportes([]);
+        }
+      } finally {
+        if (activo) {
+          setCargando(false);
+        }
       }
     }
 

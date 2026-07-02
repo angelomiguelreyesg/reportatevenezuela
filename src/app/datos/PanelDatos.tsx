@@ -18,15 +18,20 @@ export default function PanelDatos() {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
+    let activo = true;
+
     async function obtenerEstadisticas() {
-      const { data: todos } = await supabase.from("reportes").select("tipo_reporte, estado, nivel_riesgo, genero, edad");
+      try {
+        const { data: todos } = await supabase.from("reportes").select("tipo_reporte, estado, nivel_riesgo, genero, edad");
 
-      if (!todos) {
-        setCargando(false);
-        return;
-      }
+        if (!activo) return;
 
-      const resultado: Conteos = {
+        if (!todos) {
+          setCargando(false);
+          return;
+        }
+
+        const resultado: Conteos = {
         total: todos.length,
         porTipo: {},
         porEstado: {},
@@ -51,11 +56,25 @@ export default function PanelDatos() {
         }
       }
 
-      setConteos(resultado);
-      setCargando(false);
+      if (activo) {
+        setConteos(resultado);
+      }
+      } catch {
+        if (activo) {
+          setConteos(null);
+        }
+      } finally {
+        if (activo) {
+          setCargando(false);
+        }
+      }
     }
 
     obtenerEstadisticas();
+
+    return () => {
+      activo = false;
+    };
   }, []);
 
   if (cargando) {

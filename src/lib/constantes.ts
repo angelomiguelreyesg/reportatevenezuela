@@ -1,5 +1,10 @@
 export const TIPOS_REPORTE = [
   {
+    id: "infraestructura",
+    titulo: "Infraestructura Deteriorada",
+    descripcion: "Reporta edificios, vias publicas o estructuras en riesgo de colapso que representen un peligro.",
+  },
+  {
     id: "desaparecido",
     titulo: "Persona Desaparecida",
     descripcion: "Reporta la desaparicion de una persona. Proporciona todos los detalles posibles para ayudar en su busqueda.",
@@ -8,11 +13,6 @@ export const TIPOS_REPORTE = [
     id: "incidencia",
     titulo: "Incidencia General",
     descripcion: "Reporta cualquier situacion irregular, abuso, o evento que requiera atencion de las autoridades.",
-  },
-  {
-    id: "infraestructura",
-    titulo: "Infraestructura Deteriorada",
-    descripcion: "Reporta edificios, vias publicas o estructuras en riesgo de colapso que representen un peligro.",
   },
 ] as const;
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { truncarTexto } from "@/lib/utilidades/sanitizacion";
 import { ETIQUETAS_TIPO, COLORES_TIPO, COLORES_ESTADO } from "@/lib/constantes";
 
@@ -32,50 +33,51 @@ export default function TarjetaReporte({ reporte }: Props) {
 
   return (
     <>
-      <article className="bg-white border border-zinc-200 rounded-lg overflow-hidden hover:border-zinc-300 hover:shadow-sm transition-all flex flex-col">
-        {reporte.fotos.length > 0 && (
-          <div className="relative h-48 bg-zinc-100">
-            <Image
-              src={reporte.fotos[0]}
-              alt={reporte.titulo}
-              fill
-              className="object-cover cursor-pointer"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              onClick={() => setFotoAmpliada(reporte.fotos[0])}
-            />
-            {reporte.fotos.length > 1 && (
-              <span className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                +{reporte.fotos.length - 1}
+      <Link href={`/reportes/${reporte.id}`} className="block group">
+        <article className="bg-white border border-zinc-200 rounded-lg overflow-hidden hover:border-zinc-300 hover:shadow-sm transition-all flex flex-col">
+          {reporte.fotos.length > 0 && (
+            <div className="relative h-48 bg-zinc-100">
+              <Image
+                src={reporte.fotos[0]}
+                alt={reporte.titulo}
+                fill
+                className="object-cover cursor-pointer"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                onClick={() => setFotoAmpliada(reporte.fotos[0])}
+              />
+              {reporte.fotos.length > 1 && (
+                <span className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                  +{reporte.fotos.length - 1}
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className="p-4 space-y-3 flex-1 flex flex-col">
+            <div className="flex items-start justify-between gap-2">
+              <span
+                className={`text-xs font-medium px-2 py-0.5 rounded border ${
+                  COLORES_TIPO[reporte.tipo_reporte] || "bg-zinc-100 text-zinc-700 border-zinc-200"
+                }`}
+              >
+                {ETIQUETAS_TIPO[reporte.tipo_reporte] || reporte.tipo_reporte}
               </span>
-            )}
-          </div>
-        )}
+              <span
+                className={`text-xs px-2 py-0.5 rounded ${
+                  COLORES_ESTADO[reporte.estado] || "bg-zinc-100 text-zinc-600"
+                }`}
+              >
+                {reporte.estado}
+              </span>
+            </div>
 
-        <div className="p-4 space-y-3 flex-1 flex flex-col">
-          <div className="flex items-start justify-between gap-2">
-            <span
-              className={`text-xs font-medium px-2 py-0.5 rounded border ${
-                COLORES_TIPO[reporte.tipo_reporte] || "bg-zinc-100 text-zinc-700 border-zinc-200"
-              }`}
-            >
-              {ETIQUETAS_TIPO[reporte.tipo_reporte] || reporte.tipo_reporte}
-            </span>
-            <span
-              className={`text-xs px-2 py-0.5 rounded ${
-                COLORES_ESTADO[reporte.estado] || "bg-zinc-100 text-zinc-600"
-              }`}
-            >
-              {reporte.estado}
-            </span>
-          </div>
+            <h3 className="text-base font-semibold text-zinc-900 leading-snug group-hover:underline">
+              {reporte.titulo}
+            </h3>
 
-          <h3 className="text-base font-semibold text-zinc-900 leading-snug">
-            {reporte.titulo}
-          </h3>
-
-          <p className="text-sm text-zinc-600 leading-relaxed flex-1">
-            {truncarTexto(reporte.descripcion, 150)}
-          </p>
+            <p className="text-sm text-zinc-600 leading-relaxed flex-1">
+              {truncarTexto(reporte.descripcion, 150)}
+            </p>
 
           {tieneDatosCensales && (
             <div className="flex flex-wrap gap-1.5 pt-1">
@@ -119,6 +121,7 @@ export default function TarjetaReporte({ reporte }: Props) {
           </p>
         </div>
       </article>
+      </Link>
 
       {fotoAmpliada && (
         <div

@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Reportate Venezuela",
   description:
-    "Plataforma ciudadana para reportar personas desaparecidas, incidencias generales e infraestructuras en riesgo.",
+    "Plataforma ciudadana para reportar infraestructuras deterioradas, edificios en riesgo de colapso, personas desaparecidas e incidencias generales.",
 };
 
 export const viewport = "width=device-width, initial-scale=1";

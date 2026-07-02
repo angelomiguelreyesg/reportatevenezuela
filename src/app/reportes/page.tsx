@@ -3,7 +3,7 @@ import ExplorarReportes from "./ExplorarReportes";
 
 export const metadata: Metadata = {
   title: "Historial de reportes - Reportate Venezuela",
-  description: "Explora todos los reportes de personas desaparecidas, incidencias generales e infraestructuras deterioradas.",
+  description: "Explora todos los reportes de infraestructuras deterioradas, personas desaparecidas e incidencias generales.",
 };
 
 export default function PaginaReportes() {

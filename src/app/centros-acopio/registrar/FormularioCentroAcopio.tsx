@@ -7,8 +7,6 @@ import { sanitizarTexto, sanitizarTelefono } from "@/lib/utilidades/sanitizacion
 interface DatosFormulario {
   nombre: string;
   direccion: string;
-  latitud: string;
-  longitud: string;
   telefonos: string;
   horario: string;
   descripcion: string;
@@ -18,8 +16,6 @@ export default function FormularioCentroAcopio() {
   const [datos, setDatos] = useState<DatosFormulario>({
     nombre: "",
     direccion: "",
-    latitud: "",
-    longitud: "",
     telefonos: "",
     horario: "",
     descripcion: "",
@@ -47,16 +43,6 @@ export default function FormularioCentroAcopio() {
       if (!nombreLimpio) throw new Error("El nombre del centro es obligatorio.");
       if (!direccionLimpia) throw new Error("La direccion es obligatoria.");
 
-      let lat: number | null = null;
-      let lng: number | null = null;
-      if (datos.latitud && datos.longitud) {
-        lat = parseFloat(datos.latitud);
-        lng = parseFloat(datos.longitud);
-        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-          throw new Error("Coordenadas geograficas invalidas.");
-        }
-      }
-
       const listaTelefonos = datos.telefonos
         .split(",")
         .map((t) => sanitizarTelefono(t))
@@ -65,8 +51,6 @@ export default function FormularioCentroAcopio() {
       const { error: errorInsercion } = await supabase.from("centros_acopio").insert({
         nombre: nombreLimpio,
         direccion: direccionLimpia,
-        latitud: lat,
-        longitud: lng,
         telefonos: listaTelefonos,
         horario: sanitizarTexto(datos.horario.trim()),
         descripcion: sanitizarTexto(datos.descripcion.trim()),
@@ -78,8 +62,6 @@ export default function FormularioCentroAcopio() {
       setDatos({
         nombre: "",
         direccion: "",
-        latitud: "",
-        longitud: "",
         telefonos: "",
         horario: "",
         descripcion: "",
@@ -123,37 +105,6 @@ export default function FormularioCentroAcopio() {
           className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
           required
         />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label htmlFor="latitud" className="block text-sm font-medium text-zinc-700">
-            Latitud (opcional)
-          </label>
-          <input
-            type="number"
-            id="latitud"
-            name="latitud"
-            value={datos.latitud}
-            onChange={actualizarCampo}
-            step="any"
-            className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-          />
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="longitud" className="block text-sm font-medium text-zinc-700">
-            Longitud (opcional)
-          </label>
-          <input
-            type="number"
-            id="longitud"
-            name="longitud"
-            value={datos.longitud}
-            onChange={actualizarCampo}
-            step="any"
-            className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-          />
-        </div>
       </div>
 
       <div className="space-y-2">

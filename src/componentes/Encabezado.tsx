@@ -12,6 +12,7 @@ export default function Encabezado() {
     { ruta: "/reportar", texto: "Reportar" },
     { ruta: "/reportes", texto: "Historial" },
     { ruta: "/datos", texto: "Datos" },
+    { ruta: "/gobierno", texto: "Gobierno" },
     { ruta: "/centros-acopio", texto: "Centros" },
   ];
 

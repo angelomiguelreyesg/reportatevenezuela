@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Hacer un reporte - Reportate Venezuela",
-  description: "Reporta personas desaparecidas, incidencias generales o infraestructuras deterioradas.",
+  description: "Reporta infraestructuras deterioradas, edificios en riesgo de colapso, personas desaparecidas e incidencias generales.",
 };
 
 export default function PaginaReportar() {

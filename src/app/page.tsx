@@ -10,8 +10,9 @@ export default function PaginaInicio() {
           Reportate Venezuela
         </h1>
         <p className="text-lg text-zinc-600 max-w-2xl mx-auto leading-relaxed">
-          Plataforma ciudadana para visibilizar y documentar situaciones que requieren atencion
-          en todo el territorio nacional. Tu reporte puede hacer la diferencia.
+          Plataforma ciudadana para reportar infraestructuras deterioradas, edificios en riesgo de
+          colapso y otras situaciones que requieren atencion en todo el territorio nacional.
+          Tu reporte puede hacer la diferencia.
         </p>
         <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 pt-2">
           <Link

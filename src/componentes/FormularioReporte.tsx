@@ -6,7 +6,6 @@ import {
   sanitizarTexto,
   sanitizarTelefono,
   validarTelefono,
-  validarCoordenadas,
 } from "@/lib/utilidades/sanitizacion";
 import {
   TIPOS_REPORTE,
@@ -24,10 +23,11 @@ interface Props {
 interface DatosFormulario {
   tipo: TipoReporte | "";
   titulo: string;
+  nombreDesaparecido: string;
+  apellidoDesaparecido: string;
+  generoDesaparecido: string;
   descripcion: string;
   direccion: string;
-  latitud: string;
-  longitud: string;
   telefono: string;
   nombre: string;
   cedula: string;
@@ -40,12 +40,13 @@ interface DatosFormulario {
 
 export default function FormularioReporte({ tipoPorDefecto }: Props) {
   const [datos, setDatos] = useState<DatosFormulario>({
-    tipo: tipoPorDefecto || "",
+    tipo: tipoPorDefecto || "infraestructura",
     titulo: "",
+    nombreDesaparecido: "",
+    apellidoDesaparecido: "",
+    generoDesaparecido: "",
     descripcion: "",
     direccion: "",
-    latitud: "",
-    longitud: "",
     telefono: "",
     nombre: "",
     cedula: "",
@@ -100,23 +101,26 @@ export default function FormularioReporte({ tipoPorDefecto }: Props) {
 
     try {
       if (!datos.tipo) throw new Error("Selecciona un tipo de reporte.");
-      if (!sanitizarTexto(datos.titulo).trim()) throw new Error("El titulo es obligatorio.");
+
+      let tituloFinal: string;
+      if (datos.tipo === "desaparecido") {
+        const nombre = sanitizarTexto(datos.nombreDesaparecido).trim();
+        const apellido = sanitizarTexto(datos.apellidoDesaparecido).trim();
+        if (!nombre) throw new Error("El nombre de la persona desaparecida es obligatorio.");
+        if (!apellido) throw new Error("El apellido de la persona desaparecida es obligatorio.");
+        if (!datos.generoDesaparecido) throw new Error("Selecciona el genero de la persona desaparecida.");
+        tituloFinal = `${nombre} ${apellido}`;
+      } else {
+        if (!sanitizarTexto(datos.titulo).trim()) throw new Error("El titulo es obligatorio.");
+        tituloFinal = sanitizarTexto(datos.titulo.trim());
+      }
+
       if (!sanitizarTexto(datos.descripcion).trim()) throw new Error("La descripcion es obligatoria.");
       if (!sanitizarTexto(datos.direccion).trim()) throw new Error("La direccion es obligatoria.");
 
       const telefonoLimpio = sanitizarTelefono(datos.telefono);
       if (!validarTelefono(telefonoLimpio)) {
         throw new Error("Ingresa un numero telefonico valido (7-15 digitos).");
-      }
-
-      let lat: number | null = null;
-      let lng: number | null = null;
-      if (datos.latitud && datos.longitud) {
-        lat = parseFloat(datos.latitud);
-        lng = parseFloat(datos.longitud);
-        if (!validarCoordenadas(lat, lng)) {
-          throw new Error("Coordenadas geograficas invalidas.");
-        }
       }
 
       const urlsFotos: string[] = [];
@@ -142,32 +146,25 @@ export default function FormularioReporte({ tipoPorDefecto }: Props) {
 
       const { error: errorInsercion } = await supabase.from("reportes").insert({
         tipo_reporte: datos.tipo,
-        titulo: sanitizarTexto(datos.titulo.trim()),
+        titulo: tituloFinal,
         descripcion: sanitizarTexto(datos.descripcion.trim()),
         direccion: sanitizarTexto(datos.direccion.trim()),
-        latitud: lat,
-        longitud: lng,
         fotos: urlsFotos,
         telefono_contacto: telefonoLimpio,
         nombre_reportante: sanitizarTexto(datos.nombre.trim()),
-        cedula_identidad: sanitizarTexto(datos.cedula.trim()),
-        edad: edadNum,
-        genero: datos.genero,
-        fecha_evento: datos.fechaEvento || null,
-        nivel_riesgo: datos.nivelRiesgo,
-        datos_adicionales: sanitizarTexto(datos.datosAdicionales.trim()),
       });
 
-      if (errorInsercion) throw new Error("Error al guardar el reporte.");
+      if (errorInsercion) throw new Error("Error al guardar el reporte: " + errorInsercion.message);
 
       setExito("Reporte enviado correctamente. Gracias por contribuir.");
       setDatos({
         tipo: "",
         titulo: "",
+        nombreDesaparecido: "",
+        apellidoDesaparecido: "",
+        generoDesaparecido: "",
         descripcion: "",
         direccion: "",
-        latitud: "",
-        longitud: "",
         telefono: "",
         nombre: "",
         cedula: "",
@@ -185,8 +182,9 @@ export default function FormularioReporte({ tipoPorDefecto }: Props) {
     }
   }
 
+  const mostrarDesaparecido = datos.tipo === "desaparecido";
   const mostrarRiesgo = datos.tipo === "infraestructura";
-  const mostrarGeneroEdad = datos.tipo === "desaparecido" || datos.tipo === "incidencia";
+  const mostrarGeneroEdad = mostrarDesaparecido || datos.tipo === "incidencia";
 
   return (
     <form onSubmit={enviarFormulario} className="space-y-6 max-w-2xl mx-auto">
@@ -211,21 +209,215 @@ export default function FormularioReporte({ tipoPorDefecto }: Props) {
         </select>
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="titulo" className="block text-sm font-medium text-zinc-700">
-          Titulo del reporte *
-        </label>
-        <input
-          type="text"
-          id="titulo"
-          name="titulo"
-          value={datos.titulo}
-          onChange={actualizarCampo}
-          maxLength={200}
-          className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-          required
-        />
+      {mostrarDesaparecido ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label htmlFor="nombreDesaparecido" className="block text-sm font-medium text-zinc-700">
+                Nombre *
+              </label>
+              <input
+                type="text"
+                id="nombreDesaparecido"
+                name="nombreDesaparecido"
+                value={datos.nombreDesaparecido}
+                onChange={actualizarCampo}
+                maxLength={100}
+                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="apellidoDesaparecido" className="block text-sm font-medium text-zinc-700">
+                Apellido *
+              </label>
+              <input
+                type="text"
+                id="apellidoDesaparecido"
+                name="apellidoDesaparecido"
+                value={datos.apellidoDesaparecido}
+                onChange={actualizarCampo}
+                maxLength={100}
+                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+                required
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-zinc-700">
+              Genero *
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 text-sm text-zinc-700 cursor-pointer">
+                <input
+                  type="radio"
+                  name="generoDesaparecido"
+                  value="masculino"
+                  checked={datos.generoDesaparecido === "masculino"}
+                  onChange={actualizarCampo}
+                  className="accent-zinc-900"
+                />
+                Masculino
+              </label>
+              <label className="flex items-center gap-2 text-sm text-zinc-700 cursor-pointer">
+                <input
+                  type="radio"
+                  name="generoDesaparecido"
+                  value="femenino"
+                  checked={datos.generoDesaparecido === "femenino"}
+                  onChange={actualizarCampo}
+                  className="accent-zinc-900"
+                />
+                Femenino
+              </label>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <label htmlFor="titulo" className="block text-sm font-medium text-zinc-700">
+            Titulo del reporte *
+          </label>
+          <input
+            type="text"
+            id="titulo"
+            name="titulo"
+            value={datos.titulo}
+            onChange={actualizarCampo}
+            maxLength={200}
+            className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+            required
+          />
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label htmlFor="cedula" className="block text-sm font-medium text-zinc-700">
+            Cedula de identidad (opcional)
+          </label>
+          <input
+            type="text"
+            id="cedula"
+            name="cedula"
+            value={datos.cedula}
+            onChange={actualizarCampo}
+            maxLength={20}
+            placeholder="V-12345678"
+            className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="fechaEvento" className="block text-sm font-medium text-zinc-700">
+            Fecha del evento (opcional)
+          </label>
+          <input
+            type="date"
+            id="fechaEvento"
+            name="fechaEvento"
+            value={datos.fechaEvento}
+            onChange={actualizarCampo}
+            className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+          />
+        </div>
       </div>
+
+      {mostrarGeneroEdad && !mostrarDesaparecido && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label htmlFor="edad" className="block text-sm font-medium text-zinc-700">
+              Edad (opcional)
+            </label>
+            <input
+              type="number"
+              id="edad"
+              name="edad"
+              value={datos.edad}
+              onChange={actualizarCampo}
+              min={0}
+              max={130}
+              className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="genero" className="block text-sm font-medium text-zinc-700">
+              Genero (opcional)
+            </label>
+            <select
+              id="genero"
+              name="genero"
+              value={datos.genero}
+              onChange={actualizarCampo}
+              className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+            >
+              <option value="">Selecciona</option>
+              {OPCIONES_GENERO.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.etiqueta}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {mostrarDesaparecido && (
+        <div className="space-y-2">
+          <label htmlFor="edad" className="block text-sm font-medium text-zinc-700">
+            Edad (opcional)
+          </label>
+          <input
+            type="number"
+            id="edad"
+            name="edad"
+            value={datos.edad}
+            onChange={actualizarCampo}
+            min={0}
+            max={130}
+            className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+          />
+        </div>
+      )}
+
+      {mostrarRiesgo && (
+        <div className="space-y-2">
+          <label htmlFor="nivelRiesgo" className="block text-sm font-medium text-zinc-700">
+            Nivel de riesgo (opcional)
+          </label>
+          <select
+            id="nivelRiesgo"
+            name="nivelRiesgo"
+            value={datos.nivelRiesgo}
+            onChange={actualizarCampo}
+            className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+          >
+            <option value="">Selecciona nivel de riesgo</option>
+            {NIVELES_RIESGO.map((n) => (
+              <option key={n.id} value={n.id}>
+                {n.etiqueta}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {datos.tipo !== "infraestructura" && (
+        <div className="space-y-2">
+          <label htmlFor="datosAdicionales" className="block text-sm font-medium text-zinc-700">
+            Datos adicionales (opcional)
+          </label>
+          <textarea
+            id="datosAdicionales"
+            name="datosAdicionales"
+            value={datos.datosAdicionales}
+            onChange={actualizarCampo}
+            rows={3}
+            maxLength={500}
+            placeholder="Cualquier otra informacion relevante para el reporte"
+            className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent resize-y"
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <label htmlFor="descripcion" className="block text-sm font-medium text-zinc-700">
@@ -257,37 +449,6 @@ export default function FormularioReporte({ tipoPorDefecto }: Props) {
           className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
           required
         />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label htmlFor="latitud" className="block text-sm font-medium text-zinc-700">
-            Latitud (opcional)
-          </label>
-          <input
-            type="number"
-            id="latitud"
-            name="latitud"
-            value={datos.latitud}
-            onChange={actualizarCampo}
-            step="any"
-            className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-          />
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="longitud" className="block text-sm font-medium text-zinc-700">
-            Longitud (opcional)
-          </label>
-          <input
-            type="number"
-            id="longitud"
-            name="longitud"
-            value={datos.longitud}
-            onChange={actualizarCampo}
-            step="any"
-            className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-          />
-        </div>
       </div>
 
       <div className="border-t border-zinc-200 pt-6">
@@ -324,124 +485,6 @@ export default function FormularioReporte({ tipoPorDefecto }: Props) {
               onChange={actualizarCampo}
               maxLength={100}
               className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t border-zinc-200 pt-6">
-        <h3 className="text-sm font-semibold text-zinc-900 mb-1">
-          Datos censales
-        </h3>
-        <p className="text-xs text-zinc-500 mb-4">
-          Informacion adicional que permite a las autoridades y organismos competentes
-          realizar analisis y tomar decisiones informadas. Todos los campos son opcionales.
-        </p>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="cedula" className="block text-sm font-medium text-zinc-700">
-              Cedula de identidad (opcional)
-            </label>
-            <input
-              type="text"
-              id="cedula"
-              name="cedula"
-              value={datos.cedula}
-              onChange={actualizarCampo}
-              maxLength={20}
-              placeholder="V-12345678"
-              className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="fechaEvento" className="block text-sm font-medium text-zinc-700">
-              Fecha del evento (opcional)
-            </label>
-            <input
-              type="date"
-              id="fechaEvento"
-              name="fechaEvento"
-              value={datos.fechaEvento}
-              onChange={actualizarCampo}
-              className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-            />
-          </div>
-
-          {mostrarGeneroEdad && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="edad" className="block text-sm font-medium text-zinc-700">
-                  Edad (opcional)
-                </label>
-                <input
-                  type="number"
-                  id="edad"
-                  name="edad"
-                  value={datos.edad}
-                  onChange={actualizarCampo}
-                  min={0}
-                  max={130}
-                  className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="genero" className="block text-sm font-medium text-zinc-700">
-                  Genero (opcional)
-                </label>
-                <select
-                  id="genero"
-                  name="genero"
-                  value={datos.genero}
-                  onChange={actualizarCampo}
-                  className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-                >
-                  <option value="">Selecciona</option>
-                  {OPCIONES_GENERO.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.etiqueta}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
-
-          {mostrarRiesgo && (
-            <div className="space-y-2">
-              <label htmlFor="nivelRiesgo" className="block text-sm font-medium text-zinc-700">
-                Nivel de riesgo (opcional)
-              </label>
-              <select
-                id="nivelRiesgo"
-                name="nivelRiesgo"
-                value={datos.nivelRiesgo}
-                onChange={actualizarCampo}
-                className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-              >
-                <option value="">Selecciona nivel de riesgo</option>
-                {NIVELES_RIESGO.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.etiqueta}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <label htmlFor="datosAdicionales" className="block text-sm font-medium text-zinc-700">
-              Datos adicionales (opcional)
-            </label>
-            <textarea
-              id="datosAdicionales"
-              name="datosAdicionales"
-              value={datos.datosAdicionales}
-              onChange={actualizarCampo}
-              rows={3}
-              maxLength={500}
-              placeholder="Cualquier otra informacion relevante para el reporte"
-              className="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent resize-y"
             />
           </div>
         </div>
