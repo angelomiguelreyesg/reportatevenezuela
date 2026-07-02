@@ -48,7 +48,7 @@ export default function PaginaGobierno() {
       }
 
       try {
-        const { data: reportes } = await supabase.from("reportes").select("tipo_reporte, estado, nivel_riesgo, genero, edad");
+        const { data: reportes } = await supabase.from("reportes").select("*");
 
         if (!activo) return;
         if (!reportes) return;

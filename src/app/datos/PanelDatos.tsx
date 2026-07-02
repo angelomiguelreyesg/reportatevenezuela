@@ -33,7 +33,7 @@ export default function PanelDatos() {
       }
 
       try {
-        const { data: todos } = await supabase.from("reportes").select("tipo_reporte, estado, nivel_riesgo, genero, edad");
+        const { data: todos } = await supabase.from("reportes").select("*");
 
         if (!activo) return;
 
