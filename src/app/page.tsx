@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { TIPOS_REPORTE } from "@/lib/constantes";
 import ListaReportes from "@/componentes/ListaReportes";
 
 export default function PaginaInicio() {
@@ -27,24 +26,6 @@ export default function PaginaInicio() {
           >
             Ver historial
           </Link>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-zinc-900 text-center">
-          Categorias de reporte
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {TIPOS_REPORTE.map((tipo) => (
-            <Link
-              key={tipo.id}
-              href={`/reportar/${tipo.id}`}
-              className="bg-white border border-zinc-200 rounded-lg p-6 hover:border-zinc-400 hover:shadow-sm transition-all space-y-3"
-            >
-              <h3 className="text-lg font-semibold text-zinc-900">{tipo.titulo}</h3>
-              <p className="text-sm text-zinc-600 leading-relaxed">{tipo.descripcion}</p>
-            </Link>
-          ))}
         </div>
       </section>
 
