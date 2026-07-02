@@ -1,10 +1,16 @@
 export function sanitizarTexto(texto: string): string {
+  return texto.trim();
+}
+
+export function limpiarTexto(texto: string | null | undefined): string {
+  if (!texto) return "";
   return texto
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#x27;")
-    .replace(/\//g, "&#x2F;");
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, "/")
+    .replace(/&amp;/g, "&");
 }
 
 export function sanitizarTelefono(telefono: string): string {
